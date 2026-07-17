@@ -15,10 +15,11 @@ def chat_view(request):
     serializer.is_valid(raise_exception=True)
 
     user_message = serializer.validated_data["message"]
+    model = serializer.validated_data["model"]
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=model,
             max_tokens=200,
             system="You are a concise assistant",
             messages=[{"role": "user", "content": user_message}]
@@ -29,4 +30,4 @@ def chat_view(request):
         return JsonResponse({"error": str(e)}, status=500)
 
     reply_text = response.content[0].text
-    return JsonResponse({"reply": reply_text})
+    return JsonResponse({"reply": reply_text, "model_used": model})
