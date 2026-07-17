@@ -3,6 +3,7 @@ from rest_framework import serializers
 ALLOWED_MODELS = [
     "claude-sonnet-4-6",
     "claude-haiku-4-5",
+    "claude-opus-4-8"
 ]
 
 class ChatSerializer(serializers.Serializer):
