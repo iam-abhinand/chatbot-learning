@@ -6,17 +6,21 @@ ALLOWED_MODELS = [
     "claude-opus-4-8"
 ]
 
+class MessageItemSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=["user", "assistant"])
+    content = serializers.CharField(allow_blank=False)
+
 class ChatSerializer(serializers.Serializer):
-    message = serializers.CharField(allow_blank=False, max_length=2000)
+    messages = MessageItemSerializer(many=True)
     model = serializers.ChoiceField(
         choices=ALLOWED_MODELS,
         required=False,
         default="claude-haiku-4-5"
     )
 
-    def validate(self, attrs):
-        if not attrs.get("message"):
-            raise serializers.ValidationError("Message is required")
-        if len(attrs.get("message")) > 2000:
-            raise serializers.ValidationError("Message is too long")
-        return attrs
+    def validate_messages(self, value):
+        if not value:
+            raise serializers.ValidationError("Messages cannot be empty.")
+        if value[-1]["role"] != "user":
+            raise serializers.ValidationError("The last message must be from the user.")
+        return value

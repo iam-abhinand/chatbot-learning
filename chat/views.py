@@ -1,11 +1,22 @@
 import anthropic
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
+import logging
 
 from .serializers import ChatSerializer
 from .tools import TOOL_DEFINITIONS, TOOL_FUNCTIONS
 
 client = anthropic.Anthropic()
+logger = logging.getLogger(__name__)
+
+MAX_HISTORY_MESSAGES = 10  # keep only the most recent N messages
+
+
+def trim_history(messages, max_messages=MAX_HISTORY_MESSAGES):
+    """Sliding window: keep only the last N messages."""
+    if len(messages) <= max_messages:
+        return messages
+    return messages[-max_messages:]
 
 
 @api_view(['POST'])
@@ -13,12 +24,11 @@ def chat_view(request):
     serializer = ChatSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    user_message = serializer.validated_data["message"]
+    messages = trim_history(list(serializer.validated_data["messages"]))
     model = serializer.validated_data["model"]
 
-    messages = [{"role": "user", "content": user_message}]
-
     try:
+        logger.info(f"Initial messages: {messages}")
         response = client.messages.create(
             model=model,
             max_tokens=500,
@@ -61,4 +71,8 @@ def chat_view(request):
         return JsonResponse({"error": str(e)}, status=500)
 
     reply_text = "".join(b.text for b in response.content if b.type == "text")
-    return JsonResponse({"reply": reply_text, "model_used": model})
+    return JsonResponse({
+        "reply": reply_text,
+        "model_used": model,
+        "input_tokens": response.usage.input_tokens,
+    })
