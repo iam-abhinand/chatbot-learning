@@ -3,7 +3,8 @@ from rest_framework.decorators import api_view
 from django.http import JsonResponse
 import logging
 
-from .serializers import ChatSerializer
+from .serializers import ChatSerializer, RagChatSerializer
+from .rag import retrieve_relevant_chunks
 from .tools import TOOL_DEFINITIONS, TOOL_FUNCTIONS
 
 client = anthropic.Anthropic()
@@ -75,4 +76,40 @@ def chat_view(request):
         "reply": reply_text,
         "model_used": model,
         "input_tokens": response.usage.input_tokens,
+    })
+
+
+@api_view(['POST'])
+def rag_chat_view(request):
+    serializer = RagChatSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    question = serializer.validated_data["question"]
+    model = serializer.validated_data["model"]
+    top_k = serializer.validated_data["top_k"]
+
+    retrieved = retrieve_relevant_chunks(question, top_k=top_k)
+    context = "\n".join(doc for doc, _ in retrieved)
+
+    try:
+        response = client.messages.create(
+            model=model,
+            max_tokens=300,
+            system=f"Answer the user's question using only this context:\n\n{context}",
+            messages=[{"role": "user", "content": question}],
+        )
+    except anthropic.APIStatusError as e:
+        return JsonResponse({"error": e.message}, status=e.status_code)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+    reply_text = "".join(b.text for b in response.content if b.type == "text")
+
+    return JsonResponse({
+        "reply": reply_text,
+        "model_used": model,
+        # returning the retrieved chunks isn't required for the feature 
+        # its added here to SEE what informed the answer
+        # which is the actual transparency benefit of RAG
+        "retrieved_chunks": [{"text": doc, "score": round(score, 3)} for doc, score in retrieved],
     })

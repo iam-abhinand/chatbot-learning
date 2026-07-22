@@ -24,3 +24,8 @@ class ChatSerializer(serializers.Serializer):
         if value[-1]["role"] != "user":
             raise serializers.ValidationError("The last message must be from the user.")
         return value
+
+class RagChatSerializer(serializers.Serializer):
+    question = serializers.CharField(allow_blank=False, max_length=2000)
+    model = serializers.ChoiceField(choices=ALLOWED_MODELS, default="claude-haiku-4-5", required=False)
+    top_k = serializers.IntegerField(default=2, min_value=1, max_value=5, required=False)
