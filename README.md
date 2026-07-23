@@ -7,13 +7,20 @@ I built this to get hands-on practice bridging my existing backend/Django backgr
 ## 🛠️ Tech Stack & Concepts (Existing Knowledge + Learning Re-Enforcement)
 - **Backend**: Django 6, Django REST Framework, `anthropic` Python SDK
 - **Frontend**: React 18 + Vite
+- **ML/AI**: PyTorch, sentence-transformers, scikit-learn, CUDA support
 - **Tools**: Docker, Docker Compose, `uv` (Rust-based pip/venv replacement), Git
 - **Key New Concepts Learned**:
   - The Anthropic Messages API shape — `role`/`content` list, `system` prompt as a separate parameter, `stop_reason`, token usage accounting, and the fact that the API itself has no memory between calls
+  - **Conversation Management**: Sliding window strategy to manage context window size, maintaining conversation history across turns
+  - **Tool/Function Calling**: Implementing Claude's tool calling protocol with custom Python functions, handling multi-turn tool execution loops
+  - **RAG (Retrieval-Augmented Generation)**: Building semantic search with sentence embeddings, cosine similarity for document retrieval, context injection into prompts
+  - **Embeddings**: Using sentence-transformers (all-MiniLM-L6-v2) for semantic similarity, understanding vector representations of text
+  - **Token Counting**: Using Anthropic's count_tokens API for cost estimation and context management
 
 ## 🔮 Could Add / To-Do
+- [x] ~~Could Add a simple UI for selecting different models~~ (✅ Implemented - model dropdown added)
 - [ ] Could Add a `Conversation`/`Message` model + Postgres for persistent chat history
-- [ ] Could Add a simple UI for selecting different models or adjusting temperature
+- [ ] Could Add more tools beyond count_words (e.g., web search, file operations)
 - [ ] Could Make the system configured to do a specific task such as a coding assistant or a tutor
 - [ ] Could Write tests for the serializer and view error paths
 - [ ] Could Pin dependency versions deliberately (currently unpinned — picked up Django 6 unexpectedly on install)
