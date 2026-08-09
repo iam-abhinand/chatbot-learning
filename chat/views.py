@@ -11,6 +11,7 @@ client = anthropic.Anthropic()
 logger = logging.getLogger(__name__)
 
 MAX_HISTORY_MESSAGES = 10  # keep only the most recent N messages
+MAX_TOOL_ITERATIONS = 5  # hard stop on tool-use rounds per request
 
 
 def trim_history(messages, max_messages=MAX_HISTORY_MESSAGES):
@@ -28,20 +29,35 @@ def chat_view(request):
     messages = trim_history(list(serializer.validated_data["messages"]))
     model = serializer.validated_data["model"]
 
+    system_prompt = (
+        "You are a concise assistant. Use the count_words tool to count words/characters, "
+        "and the reverse_text tool to reverse text. Chain them if a task needs both."
+    )
+
     try:
         logger.info(f"Initial messages: {messages}")
         response = client.messages.create(
             model=model,
             max_tokens=500,
             tools=TOOL_DEFINITIONS,
-            system="You are a concise assistant. Use the count_words tool whenever the user asks about word or character counts, instead of counting yourself.",
+            system=system_prompt,
             messages=messages,
         )
 
-        # Added Loop here instead of a single check cause - Claude could call the tool more than
-        # once (e.g. counting two separate pieces of text) before it's
-        # actually ready to give a final text answer.
+        # Added Loop here instead of a single check — Claude could call the tool more than once
+        # across several rounds before it's ready to give a final
+        # text answer. iterations tracks how many rounds actually happened,
+        # and the cap below stops a confused/looping agent from running
+        # (and billing) indefinitely.
+        iterations = 0
         while response.stop_reason == "tool_use":
+            iterations += 1
+            if iterations > MAX_TOOL_ITERATIONS:
+                return JsonResponse(
+                    {"error": f"Stopped after {MAX_TOOL_ITERATIONS} tool-use rounds without a final answer."},
+                    status=500,
+                )
+
             tool_use_blocks = [b for b in response.content if b.type == "tool_use"]
 
             messages.append({"role": "assistant", "content": response.content})
@@ -62,7 +78,7 @@ def chat_view(request):
                 model=model,
                 max_tokens=500,
                 tools=TOOL_DEFINITIONS,
-                system="You are a concise assistant. Use the count_words tool whenever the user asks about word or character counts, instead of counting yourself.",
+                system=system_prompt,
                 messages=messages,
             )
 
@@ -76,6 +92,7 @@ def chat_view(request):
         "reply": reply_text,
         "model_used": model,
         "input_tokens": response.usage.input_tokens,
+        "tool_iterations": iterations,
     })
 
 

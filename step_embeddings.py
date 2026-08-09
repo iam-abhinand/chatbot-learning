@@ -23,8 +23,10 @@ def cosine_similarity(a, b):
 print("\ncat/mat vs feline/rug:", cosine_similarity(embeddings[0], embeddings[1]))
 print("cat/mat vs Django:", cosine_similarity(embeddings[0], embeddings[2]))
 
-# My Output:
-# Shape: (3, 384)
+"""
+My Output:
+Shape: (3, 384)
 
-# cat/mat vs feline/rug: 0.5559763
-# cat/mat vs Django: 0.013242047
+cat/mat vs feline/rug: 0.5559763
+cat/mat vs Django: 0.013242047
+"""

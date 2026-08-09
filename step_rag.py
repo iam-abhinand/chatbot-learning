@@ -53,10 +53,12 @@ print("\n--- Claude's answer ---")
 print(response.content[0].text)
 
 
-# The OUTPUT : 
-# --- Retrieved chunks ---
-# [0.496] The frontend is built with React and Vite, running on port 5173 by default.
-# [0.491] Docker Compose is used to run the backend and frontend together locally.
+"""
+The OUTPUT : 
+--- Retrieved chunks ---
+[0.496] The frontend is built with React and Vite, running on port 5173 by default.
+[0.491] Docker Compose is used to run the backend and frontend together locally.
 
-# --- Claude's answer ---
-# According to the provided context, this project uses **React** as the frontend framework, with **Vite** as the build tool. The frontend runs on port 5173 by default.
+--- Claude's answer ---
+According to the provided context, this project uses **React** as the frontend framework, with **Vite** as the build tool. The frontend runs on port 5173 by default.
+"""
