@@ -16,6 +16,8 @@ I built this to get hands-on practice bridging my existing backend/Django backgr
   - **RAG (Retrieval-Augmented Generation)**: Building semantic search with sentence embeddings, cosine similarity for document retrieval, context injection into prompts
   - **Embeddings**: Using sentence-transformers (all-MiniLM-L6-v2) for semantic similarity, understanding vector representations of text
   - **Token Counting**: Using Anthropic's count_tokens API for cost estimation and context management
+  - **Agentic Loops**: Extending tool-use into multi-tool chains where Claude autonomously sequences calls (e.g. reverse text, then count the result) without hardcoded step order; added a hard iteration cap (`MAX_TOOL_ITERATIONS`) since an agent that decides its own step count can otherwise loop indefinitely, billing every round
+  - **MCP (Model Context Protocol)**: Built a standalone MCP server (`step_mcp_server.py`) exposing tools via the decorator-based API, and a client (`step_mcp_client.py`) that discovers tools dynamically at runtime via `list_tools()` rather than importing a hardcoded list — proof-of-concept only, not wired into the Django app itself
 
 ## 🔮 Could Add / To-Do
 - [x] ~~Could Add a simple UI for selecting different models~~ (✅ Implemented - model dropdown added)
